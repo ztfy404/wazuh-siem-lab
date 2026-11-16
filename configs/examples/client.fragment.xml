@@ -1,0 +1,9 @@
+<!-- Example fragment for the agent. Merge into the existing ossec_config/client.
+     Reconstructed for documentation; not exported from the author's lab. -->
+<client>
+  <server>
+    <address>WAZUH_SERVER_IP</address>
+    <port>1514</port>
+    <protocol>tcp</protocol>
+  </server>
+</client>

@@ -1,0 +1,36 @@
+# Local output and runtime state
+/reports/
+/private/
+/work/
+/tmp/
+*.log
+*.log.*
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Secrets and registration artifacts
+.env
+.env.*
+!.env.example
+client.keys
+authd.pass
+wazuh-passwords.txt
+wazuh-install-files*
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*.json
+
+# VM images, snapshots and installation media
+*.vdi
+*.vmdk
+*.vhd
+*.vhdx
+*.qcow2
+*.ova
+*.ovf
+*.iso
+*.sav

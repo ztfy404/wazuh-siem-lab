@@ -1,0 +1,5 @@
+<!-- Example only. Check whether auth.log already exists in the agent config. -->
+<localfile>
+  <log_format>syslog</log_format>
+  <location>/var/log/auth.log</location>
+</localfile>
