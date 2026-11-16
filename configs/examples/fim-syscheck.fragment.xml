@@ -1,5 +1,4 @@
-<!-- Merge directories into the existing syscheck section; do not replace the full config.
-     Realtime mode is an example, not a verified setting from the original lab. -->
+<!-- Пример: добавить каталог в существующую секцию syscheck. -->
 <syscheck>
   <directories check_all="yes" realtime="yes">/opt/siem-fim-test</directories>
 </syscheck>

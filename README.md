@@ -1,90 +1,65 @@
-# Wazuh SIEM Lab — Ubuntu Server + Astra Linux
+# Мой SIEM-стенд на Wazuh
 
-Учебный стенд для централизованного сбора и анализа событий безопасности Linux: Wazuh All-in-One на Ubuntu Server и отдельный агент на Astra Linux в Oracle VirtualBox.
+В этом проекте я развернул Wazuh в VirtualBox и подключил к нему отдельную виртуальную машину с Astra Linux. Хотел разобраться, как SIEM собирает события с Linux и как искать их в интерфейсе.
 
-**Стек:** Wazuh · Ubuntu Server · Astra Linux · VirtualBox · Linux logs · SSH · sudo · File Integrity Monitoring
+## Что использовал
 
-> **Статус:** по описанию автора стенд развёрнут, агент подключён; выполнены проверки SSH, sudo и изменений файлов. Репозиторий оформлен по техническому описанию проекта. Исходные конфигурации, журнал установки и упомянутые 14 скриншотов пока не приложены. Примеры в `configs/examples/` восстановлены для документации и не являются экспортом работающего стенда. Стенд при подготовке репозитория повторно не запускался.
+| Что | Для чего |
+|---|---|
+| Windows 10 и VirtualBox | Хост и запуск виртуальных машин |
+| Ubuntu Server 24.04 LTS | Сервер Wazuh |
+| Astra Linux Orel 2.12.46 | Машина с агентом |
+| Wazuh 4.14.10 | Сбор и анализ событий |
 
-## Задача проекта
+## Как устроен стенд
 
-Создать локальный SIEM-стенд и пройти путь от установки серверных компонентов до получения событий с отдельного Linux-узла в Wazuh Dashboard. Проект ориентирован на практику начинающего SOC-аналитика: подключение источника, поиск событий, проверка контекста и диагностика доставки.
-
-## Архитектура
+На Ubuntu я установил Wazuh Manager, Indexer, Dashboard и Filebeat. На Astra Linux — Wazuh Agent. Для связи между виртуальными машинами выбрал сетевой мост.
 
 ```mermaid
 flowchart LR
-  subgraph host[Windows 10 — Oracle VirtualBox]
-    subgraph endpoint[Astra Linux Orel 2.12.46]
-      logs[auth.log: SSH и sudo] --> agent[Wazuh Agent]
-      fim[Тестовый каталог FIM] --> agent
-    end
-    subgraph server[Ubuntu Server 24.04 LTS — All-in-One]
-      manager[Wazuh Manager] --> filebeat[Filebeat]
-      filebeat -->|TLS: индексация| indexer[Wazuh Indexer]
-      dashboard[Wazuh Dashboard] -->|Запросы и получение событий| indexer
-    end
-    agent -->|TCP 1514: события| manager
-    agent -.->|TCP 1515: регистрация| manager
+  subgraph astra["Astra Linux"]
+    logs["SSH, sudo и изменения файлов"] --> agent["Wazuh Agent"]
   end
-  browser[Административный браузер] -->|HTTPS 443| dashboard
+  subgraph ubuntu["Ubuntu Server"]
+    manager["Wazuh Manager"] --> filebeat["Filebeat"]
+    filebeat --> indexer["Wazuh Indexer"]
+    dashboard["Wazuh Dashboard"] -->|Запрос событий| indexer
+  end
+  agent -->|TCP 1514| manager
+  browser["Браузер"] -->|HTTPS 443| dashboard
 ```
 
-ВМ связаны через **Bridged Adapter**. Реальные адреса не опубликованы. Версия Wazuh Server/Agent, указанная автором, — **4.14.10**; вывод установленной версии ещё не приложен. Filebeat используется в составе All-in-One, его точная версия отдельно не известна.
+## Что я сделал
 
-## Что сделано
+- Подготовил две виртуальные машины и настроил связь между ними.
+- Установил серверные компоненты Wazuh и открыл Dashboard.
+- Установил агент на Astra Linux и зарегистрировал его на сервере.
+- Проверил подключение Filebeat к Indexer.
+- Нашёл события SSH в `/var/log/auth.log` и в Threat Hunting.
+- Проверил регистрацию событий `sudo`.
+- Настроил FIM для `/opt/siem-fim-test/` и проверял создание, изменение и удаление файла.
 
-- Подготовлена локальная виртуальная инфраструктура.
-- Установлены Wazuh Manager, Indexer, Dashboard и Filebeat.
-- Подключён и зарегистрирован Linux-агент на Astra Linux.
-- Проверена доставка событий аутентификации SSH и использование sudo.
-- Настроен контроль каталога `/opt/siem-fim-test/`; выполнялись создание, изменение и удаление файла.
-- Проверено соединение Filebeat с Indexer; по описанию автора TLS handshake завершался успешно.
-- Проведена диагностика проблем установки, запуска служб и сети.
+## Результат
 
-Все пункты выше отражают предоставленное описание автора. Точные команды устранения ошибок, rule ID, уровни алертов и изображения нужны для независимой проверки. Сведения о фактическом состоянии собраны в [таблице результатов](docs/results.md).
+У меня получился учебный стенд с одним Linux-агентом. Через Dashboard я могу смотреть события с Astra Linux и разбирать, что происходило на этой машине.
 
-## Как читать репозиторий
+Скриншоты добавлю позже. Примеры XML в `configs/examples/` оставил для настройки похожего стенда; это не копии моего полного конфига.
 
-| Раздел | Содержание |
-|---|---|
-| [Архитектура](docs/architecture.md) | Узлы, ресурсы, порты и ограничения стенда |
-| [Развёртывание](docs/deployment.md) | Восстановленный порядок и проверка компонентов |
-| [Подключение агента](docs/agent-setup.md) | Astra Linux, регистрация и источники событий |
-| [Сценарии обнаружения](docs/detection-tests.md) | SSH, sudo, FIM и фиксация результатов |
-| [Результаты](docs/results.md) | Что сообщено автором и какие доказательства доступны |
-| [Диагностика](docs/troubleshooting.md) | Известные проблемы и границы доступных сведений |
-| [Примеры настроек](configs/examples/README.md) | XML-фрагменты с пояснениями по применению |
-| [Снимки экрана](screenshots/README.md) | План размещения фактических скриншотов |
-| [Публикация на GitHub](docs/github-publishing.md) | Загрузка, описание и закрепление проекта в профиле |
-| [Текст для портфолио](docs/portfolio.md) | Описание проекта и пункты для резюме |
+## Что лежит в репозитории
 
-## Повторение стенда
+- [Архитектура](docs/architecture.md) — виртуальные машины, ресурсы и порты.
+- [Установка Wazuh](docs/deployment.md) и [подключение агента](docs/agent-setup.md).
+- [Проверки SSH, sudo и FIM](docs/detection-tests.md).
+- [Результаты](docs/results.md) и [проблемы при настройке](docs/troubleshooting.md).
+- [Примеры конфигурации](configs/examples/README.md).
+- [Скриншоты](screenshots/README.md).
 
-1. Изучить [характеристики и ограничения](docs/architecture.md). Сообщённые значения RAM относятся к разным этапам и не являются готовой схемой одновременного запуска ВМ.
-2. Подготовить ВМ и установить совместимые версии по [порядку развёртывания](docs/deployment.md). Автоматизированный установщик в репозитории отсутствует: исходная последовательность команд не предоставлена.
-3. [Подключить Astra Linux](docs/agent-setup.md), сверив версии и сетевую доступность.
-4. Выполнить [контрольные сценарии](docs/detection-tests.md), сохранив свои результаты.
-
-Для локальной диагностики добавлен новый вспомогательный скрипт:
+Для быстрой проверки служб и версий есть [collect-health.sh](scripts/collect-health.sh):
 
 ```bash
 bash scripts/collect-health.sh server
-# На ВМ Astra Linux:
+# На машине с агентом:
 bash scripts/collect-health.sh agent
 ```
 
-Он выводит версии пакетов, состояние служб и ресурсы; не устанавливает ПО и не меняет конфигурацию. Это инструмент подготовки портфолио, а не скрипт, использовавшийся в исходном проекте. Вывод проверяйте перед публикацией; диагностические отчёты исключены через `.gitignore`.
-
-## Границы проекта
-
-- Один Linux-агент; Windows 10 служит хостом, агент на Windows не установлен.
-- Нет подтверждения собственных правил/декодеров, отдельного завершённого SCA-сценария, Active Directory, уведомлений или Active Response.
-- Отказоустойчивость, резервное копирование, производственная эксплуатация и длительное нагрузочное тестирование не заявлены.
-- Незавершённый эксперимент с ИИ-агентом в Docker не входит в архитектуру SIEM.
-
-## Источники и происхождение материалов
-
-Основа репозитория — техническое описание, предоставленное автором проекта. Подробности: [источник и ограничения](docs/source-and-scope.md). Официальная документация Wazuh указана как справочный материал, а не доказательство фактических действий автора.
-
-**English summary:** A local Wazuh SIEM lab with an Ubuntu Server all-in-one deployment and an Astra Linux agent in VirtualBox. The project documents Linux authentication monitoring and FIM checks reported by the author. Original screenshots and configuration exports are pending; supplied XML examples are reconstructed, not captured from the running lab.
+Скрипт только выводит информацию, настройки не меняет.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# New, read-only helper for this portfolio. Not an original deployment script.
+# Проверка версий, служб и ресурсов. Настройки не меняет.
 set -uo pipefail
 
 usage() {
@@ -27,7 +27,7 @@ case "$1" in
   *) usage >&2; exit 2 ;;
 esac
 
-printf 'Wazuh portfolio health snapshot (review before sharing)\n'
+printf 'Wazuh lab: service and package check\n'
 printf 'Role: %s\n' "$1"
 printf 'Time: '
 date -Iseconds

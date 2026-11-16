@@ -1,5 +1,4 @@
-<!-- Example fragment for the agent. Merge into the existing ossec_config/client.
-     Reconstructed for documentation; not exported from the author's lab. -->
+<!-- Пример: заменить WAZUH_SERVER_IP и объединить с существующим client. -->
 <client>
   <server>
     <address>WAZUH_SERVER_IP</address>
